@@ -374,6 +374,9 @@ pub struct Niri {
     /// taking grabs into account is expected, because we pass the information to pointer.motion()
     /// which passes it down through grabs, which decide what to do with it as they see fit.
     pub pointer_contents: PointContents,
+    /// Whether to apply focus-follows-mouse to the window under the pointer once a workspace switch
+    /// finishes.
+    pub focus_follows_mouse_pending: bool,
     pub pointer_visibility: PointerVisibility,
     pub pointer_inactivity_timer: Option<RegistrationToken>,
     /// Whether the pointer inactivity timer got reset this event loop iteration.
@@ -1164,6 +1167,15 @@ impl State {
                     return;
                 }
             }
+        }
+
+        if self.niri.focus_follows_mouse_pending {
+            self.niri.focus_follows_mouse_pending = false;
+
+            // The switch has finished, so the contents under the stationary pointer are final.
+            let under = self.niri.contents_under(location);
+            self.niri
+                .apply_focus_follows_mouse(&under, &PointContents::default());
         }
 
         if !self.update_pointer_contents() {
@@ -2726,6 +2738,7 @@ impl Niri {
             cursor_shape_manager_state,
             dnd_icon: None,
             pointer_contents: PointContents::default(),
+            focus_follows_mouse_pending: false,
             pointer_visibility: PointerVisibility::Visible,
             pointer_inactivity_timer: None,
             pointer_inactivity_timer_got_reset: false,
@@ -6788,6 +6801,36 @@ impl Niri {
     }
 
     pub fn handle_focus_follows_mouse(&mut self, new_focus: &PointContents) {
+        // Real pointer motion takes over from any pending post-switch focus.
+        self.focus_follows_mouse_pending = false;
+
+        let pointer = &self.seat.get_pointer().unwrap();
+
+        // Recompute the current pointer focus because we don't update it during animations.
+        let current_focus = self.contents_under(pointer.current_location());
+
+        self.apply_focus_follows_mouse(new_focus, &current_focus);
+    }
+
+    /// Requests focus-follows-mouse to apply to the stationary pointer after a workspace switch.
+    ///
+    /// Does nothing unless `on-workspace-switch` is enabled for focus-follows-mouse. The focus is
+    /// applied by `refresh_pointer_contents()` once the switch transition finishes.
+    pub fn request_focus_follows_mouse_after_switch(&mut self) {
+        let enabled = self
+            .config
+            .borrow()
+            .input
+            .focus_follows_mouse
+            .is_some_and(|ffm| ffm.on_workspace_switch);
+        self.focus_follows_mouse_pending = enabled;
+    }
+
+    fn apply_focus_follows_mouse(
+        &mut self,
+        new_focus: &PointContents,
+        current_focus: &PointContents,
+    ) {
         let Some(ffm) = self.config.borrow().input.focus_follows_mouse else {
             return;
         };
@@ -6800,9 +6843,6 @@ impl Niri {
         if self.window_mru_ui.is_open() {
             return;
         }
-
-        // Recompute the current pointer focus because we don't update it during animations.
-        let current_focus = self.contents_under(pointer.current_location());
 
         if let Some(output) = &new_focus.output {
             if current_focus.output.as_ref() != Some(output) {

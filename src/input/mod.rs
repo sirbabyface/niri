@@ -1472,6 +1472,7 @@ impl State {
                 self.niri.layout.switch_workspace_down();
                 self.maybe_warp_cursor_to_focus();
                 self.niri.layer_shell_on_demand_focus = None;
+                self.niri.request_focus_follows_mouse_after_switch();
                 // FIXME: granular
                 self.niri.queue_redraw_all();
             }
@@ -1481,6 +1482,7 @@ impl State {
                         mon.switch_workspace_down();
                         self.maybe_warp_cursor_to_focus();
                         self.niri.layer_shell_on_demand_focus = None;
+                        self.niri.request_focus_follows_mouse_after_switch();
                         self.niri.queue_redraw(&output);
                     }
                 }
@@ -1489,6 +1491,7 @@ impl State {
                 self.niri.layout.switch_workspace_up();
                 self.maybe_warp_cursor_to_focus();
                 self.niri.layer_shell_on_demand_focus = None;
+                self.niri.request_focus_follows_mouse_after_switch();
                 // FIXME: granular
                 self.niri.queue_redraw_all();
             }
@@ -1498,6 +1501,7 @@ impl State {
                         mon.switch_workspace_up();
                         self.maybe_warp_cursor_to_focus();
                         self.niri.layer_shell_on_demand_focus = None;
+                        self.niri.request_focus_follows_mouse_after_switch();
                         self.niri.queue_redraw(&output);
                     }
                 }
@@ -1528,6 +1532,7 @@ impl State {
                         self.maybe_warp_cursor_to_focus();
                     }
                     self.niri.layer_shell_on_demand_focus = None;
+                    self.niri.request_focus_follows_mouse_after_switch();
 
                     // FIXME: granular
                     self.niri.queue_redraw_all();
@@ -1537,6 +1542,7 @@ impl State {
                 self.niri.layout.switch_workspace_previous();
                 self.maybe_warp_cursor_to_focus();
                 self.niri.layer_shell_on_demand_focus = None;
+                self.niri.request_focus_follows_mouse_after_switch();
                 // FIXME: granular
                 self.niri.queue_redraw_all();
             }
