@@ -366,6 +366,16 @@ input {
 }
 ```
 
+<sup>Since: next release</sup> Normally, focus-follows-mouse only reacts to the mouse moving.
+Set `on-workspace-switch=true` to also focus the window under a stationary mouse pointer after switching workspaces with a focus-workspace action.
+The focus changes once the workspace switch animation finishes.
+
+```kdl
+input {
+    focus-follows-mouse on-workspace-switch=true
+}
+```
+
 #### `workspace-auto-back-and-forth`
 
 Normally, switching to the same workspace by index twice will do nothing (since you're already on that workspace).
